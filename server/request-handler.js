@@ -24,11 +24,18 @@ var requestHandler = function(request, response) {
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify(messages));
   } else if (request.url === '/classes/messages' && request.method === 'POST') {
-    headers['Content-Type'] = 'application/json';
-    statusCode = 201;
-    response.writeHead(statusCode, headers);
-    //messages.results.push(request._postData);
-    response.end();
+
+    let body = [];
+    request.on('data', (chunk) => {
+      body.push(chunk);
+    }).on('end', () => {
+      headers['Content-Type'] = 'application/json';
+      statusCode = 201;
+      body = Buffer.concat(body).toString();
+      response.writeHead(statusCode, headers);
+      messages.results.push(JSON.parse(body));
+      response.end();
+    });
   } else {
     headers['Content-Type'] = 'application/json';
     statusCode = 404;
