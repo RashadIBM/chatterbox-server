@@ -29,11 +29,12 @@ var requestHandler = function(request, response) {
     request.on('data', (chunk) => {
       body.push(chunk);
     }).on('end', () => {
+      body = Buffer.concat(body).toString();
+      messages.results.push(JSON.parse(body));
+
       headers['Content-Type'] = 'application/json';
       statusCode = 201;
-      body = Buffer.concat(body).toString();
       response.writeHead(statusCode, headers);
-      messages.results.push(JSON.parse(body));
       response.end();
     });
   } else {
