@@ -5,18 +5,38 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+var messages = {
+  results: []
+};
+
 var requestHandler = function(request, response) {
 
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   var statusCode = 200; // The outgoing status.
   var headers = defaultCorsHeaders;
-
-  headers['Content-Type'] = 'text/plain'; // Change if you sending something other than plain text, like JSON or HTML.
-  response.writeHead(statusCode, headers); // .writeHead() writes to the request line and headers of the response, which includes the status and all headers.
-
-  response.end('Hello, oorld!');
+  if (request.url === '') {
+    headers['Content-Type'] = 'text/plain'; // Change if you sending something other than plain text, like JSON or HTML.
+    response.writeHead(statusCode, headers); // .writeHead() writes to the request line and headers of the response, which includes the status and all headers.
+    response.end('Hello, World!');
+  } else if (request.url === '/classes/messages' && request.method === 'GET') {
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(messages));
+  } else if (request.url === '/classes/messages' && request.method === 'POST') {
+    headers['Content-Type'] = 'application/json';
+    statusCode = 201;
+    response.writeHead(statusCode, headers);
+    //messages.results.push(request._postData);
+    response.end();
+  } else {
+    headers['Content-Type'] = 'application/json';
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
 };
+
 
 exports.requestHandler = requestHandler;
 
