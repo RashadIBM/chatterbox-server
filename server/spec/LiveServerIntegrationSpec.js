@@ -51,6 +51,7 @@ describe('server', function() {
     var requestParams = {method: 'POST',
       uri: 'http://127.0.0.1:3000/classes/messages',
       json: {
+        id: 3,
         username: 'Jono',
         text: 'Do my bidding!'}
     };
@@ -73,5 +74,40 @@ describe('server', function() {
     });
   });
 
+  it('should accept PUT requests to /classes/messages', function(done) {
+    var requestParams = {method: 'PUT',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        id: 3,
+        username: 'Failure',
+        text: 'Oh no!'}
+    };
+    request(requestParams, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+      request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+        var messages = JSON.parse(body).results;
+        expect(messages).to.include({ id: 3, username: 'Failure', text: 'Oh no!'});
+        expect(messages).to.not.include({ id: 3, username: 'Jono', text: 'Do my bidding!'});
+        done();
+      });
+    });
+  });
 
+  it('should accept DELETE requests to /classes/messages', function(done) {
+    var requestParams = {method: 'DELETE',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+      json: {
+        id: 3,
+        username: 'Failure',
+        text: 'Oh no!'}
+    };
+    request(requestParams, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+      request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+        var messages = JSON.parse(body).results;
+        expect(messages).to.not.include({ id: 3, username: 'Failure', text: 'Oh no!'});
+        done();
+      });
+    });
+  });
 });
