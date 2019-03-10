@@ -103,4 +103,43 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should send all messages that were previously posted', function() {
+    var req = new stubs.request('/classes/messages', 'POST', {username: 'Nick', text: 'Howdy!' });
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+    var req = new stubs.request('/classes/messages', 'POST', {username: 'Rashad', text: 'Doing well!' });
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+    handler.requestHandler(req, res);
+    expect(JSON.parse(res._data).results.length).to.equal(4);
+  });
+
+  it('Should send OPTIONS requests', function() {
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+    expect(res._responseCode).to.equal(200);
+    expect(res._headers['access-control-allow-methods']).to.equal('GET, POST, PUT, DELETE, OPTIONS');
+  });
+
+  it('Should update with PUT requests', function() {
+    var req = new stubs.request('/classes/messages', 'POST', {id: 1, username: 'Nick', text: 'Hiya!' });
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+
+    var req = new stubs.request('/classes/messages', 'PUT', {id: 1, username: 'Nick', text: 'Hola¡!' });
+    var res = new stubs.response();
+    handler.requestHandler(req, res);
+
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+    handler.requestHandler(req, res);
+
+    var data = JSON.parse(res._data).results;
+    expect(data[data.length - 1]).to.eql({ id: 1, username: 'Nick', text: 'Hola¡!' });
+  });
+
 });

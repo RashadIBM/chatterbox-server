@@ -10,21 +10,19 @@ var messages = {
 };
 
 var requestHandler = function(request, response) {
-
-  //console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  // console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   var statusCode = 200; // The outgoing status.
   var headers = defaultCorsHeaders;
-  if (request.url === '') {
-    headers['Content-Type'] = 'text/plain'; // Change if you sending something other than plain text, like JSON or HTML.
+  if (request.method === 'OPTIONS') {
+    headers['Content-Type'] = 'application/json'; // Change if you sending something other than plain text, like JSON or HTML.
     response.writeHead(statusCode, headers); // .writeHead() writes to the request line and headers of the response, which includes the status and all headers.
-    response.end('Hello, World!');
-  } else if (request.url === '/classes/messages' && request.method === 'GET') {
+    response.end();
+  } else if (request.url.includes('/classes/messages') && request.method === 'GET') {
     headers['Content-Type'] = 'application/json';
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify(messages));
-  } else if (request.url === '/classes/messages' && request.method === 'POST') {
-
+  } else if (request.url.includes('/classes/messages') && request.method === 'POST') {
     let body = [];
     request.on('data', (chunk) => {
       body.push(chunk);
@@ -32,6 +30,43 @@ var requestHandler = function(request, response) {
       body = Buffer.concat(body).toString();
       messages.results.push(JSON.parse(body));
 
+      headers['Content-Type'] = 'application/json';
+      statusCode = 201;
+      response.writeHead(statusCode, headers);
+      response.end();
+    });
+  } else if (request.url.includes('/classes/messages') && request.method === 'PUT') {
+    let body = [];
+    request.on('data', (chunk) => {
+      body.push(chunk);
+    }).on('end', () => {
+      body = Buffer.concat(body).toString();
+
+      var updatedVal = JSON.parse(body);
+      var updatedId = updatedVal.id;
+      for (var key in messages.results) {
+        if (messages.results[key].id === updatedId) {
+          messages.results[key] = updatedVal;
+        }
+      }
+      headers['Content-Type'] = 'application/json';
+      statusCode = 201;
+      response.writeHead(statusCode, headers);
+      response.end();
+    });
+  } else if (request.url.includes('/classes/messages') && request.method === 'DELETE') {
+    let body = [];
+    request.on('data', (chunk) => {
+      body.push(chunk);
+    }).on('end', () => {
+      body = Buffer.concat(body).toString();
+
+      var deletedId = JSON.parse(body).id;
+      for (var key in messages.results) {
+        if (messages.results[key].id === deletedId) {
+          delete messages.results[key];
+        }
+      }
       headers['Content-Type'] = 'application/json';
       statusCode = 201;
       response.writeHead(statusCode, headers);
